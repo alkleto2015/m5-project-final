@@ -99,12 +99,14 @@ spring:
   mvc.throw-exception-if-no-handler-found: true
   web.resources.add-mappings: false
 
+
 logging:
   level:
-    root: WARN
+    root: INFO
     com.javarush.jira: DEBUG
     com.javarush.jira.common.config.MvcConfig: WARN
     org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: DEBUG
+
 
 server:
   #  https://springdoc.org/index.html#how-can-i-deploy-springdoc-openapi-ui-behind-a-reverse-proxy
@@ -115,4 +117,6 @@ server:
       enabled: true # Enable http encoding support
       force: true
 springdoc.swagger-ui.path: /doc
+
+
 

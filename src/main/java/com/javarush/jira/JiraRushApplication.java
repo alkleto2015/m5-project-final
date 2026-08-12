@@ -10,8 +10,11 @@ import org.springframework.cache.annotation.EnableCaching;
 @EnableConfigurationProperties(AppProperties.class)
 @EnableCaching
 public class JiraRushApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(JiraRushApplication.class, args);
     }
 }
+
+
+
+
