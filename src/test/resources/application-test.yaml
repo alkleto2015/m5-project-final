@@ -1,26 +1,19 @@
 spring:
   liquibase:
     enabled: true
+    change-log: classpath:db/changelog.sql
   cache:
     type: none
-  init:
-    mode: always
   datasource:
-    # URL для H2 в режиме памяти с поддержкой синтаксиса PostgreSQL
-    url: jdbc:h2:mem:jira-test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    url: jdbc:h2:mem:jira-test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;NON_KEYWORDS=VALUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
   jpa:
-    # Явно задаем диалект PostgreSQL для Hibernate
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: validate
   sql:
     init:
       mode: never
-
-
-
-
 

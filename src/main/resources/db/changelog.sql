@@ -107,7 +107,7 @@ create table CONTACT
 (
     ID    bigint       not null,
     CODE  varchar(32)  not null,
-    "VALUE" varchar(256) not null,
+    VALUE varchar(256) not null,
     primary key (ID, CODE),
     constraint FK_CONTACT_PROFILE foreign key (ID) references PROFILE (ID) on delete cascade
 );
@@ -322,15 +322,11 @@ values ('todo', 'ToDo', 3, 'in_progress,canceled|'),
        ('done', 'Done', 3, 'canceled|'),
        ('canceled', 'Canceled', 3, null);
 
---changeset ishlyakhtenkov:change_UK_USER_BELONG validCheckSum:ANY
 
---drop index UK_USER_BELONG;
---create unique index UK_USER_BELONG on USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE) where ENDPOINT is null;
-
---changeset ishlyakhtenkov:change_UK_USER_BELONG_pg dbms:postgresql
-drop index UK_USER_BELONG;
-create unique index UK_USER_BELONG on USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE) where ENDPOINT is null;
+--changeset ishlyakhtenkov:change_UK_USER_BELONG_pg dbms:postgresql validCheckSum:ANY
+DROP INDEX IF EXISTS UK_USER_BELONG;
+CREATE UNIQUE INDEX UK_USER_BELONG ON USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE) WHERE ENDPOINT IS NULL;
 
 --changeset ishlyakhtenkov:change_UK_USER_BELONG_h2 dbms:h2
-drop index UK_USER_BELONG;
-create unique index UK_USER_BELONG on USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE);
+DROP INDEX IF EXISTS UK_USER_BELONG;
+CREATE UNIQUE INDEX UK_USER_BELONG ON USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE);
