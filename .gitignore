@@ -6,5 +6,7 @@ logs
 attachments
 *.patch
 src/main/resources/application-secret.properties
-
-
+src/test/resources/workingChangelog
+src/test/resources/workingData.sql
+src/test/resources/workingApplicationTest.yaml
+src/test/resources/try-catchApplication
