@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset kmpk:init_schema
+--changeset kmpk:init_schema validCheckSum:ANY
 DROP TABLE IF EXISTS USER_ROLE;
 DROP TABLE IF EXISTS CONTACT;
 DROP TABLE IF EXISTS MAIL_CASE;
@@ -76,7 +76,7 @@ create table REFERENCE
     ENDPOINT   timestamp,
     STARTPOINT timestamp,
     TITLE      varchar(1024) not null,
-    AUX        varchar,
+    AUX        varchar(255),
     constraint UK_REFERENCE_REF_TYPE_CODE unique (REF_TYPE, CODE)
 );
 
@@ -279,19 +279,16 @@ values ('todo', 'ToDo', 3, 'in_progress,canceled'),
        ('done', 'Done', 3, 'canceled'),
        ('canceled', 'Canceled', 3, null);
 
---changeset gkislin:users_add_on_delete_cascade
+--changeset gkislin:users_add_on_delete_cascade validCheckSum:ANY
 
-alter table ACTIVITY
-    drop constraint FK_ACTIVITY_USERS,
-    add constraint FK_ACTIVITY_USERS foreign key (AUTHOR_ID) references USERS (ID) on delete cascade;
+    alter table ACTIVITY drop constraint FK_ACTIVITY_USERS;
+    alter table ACTIVITY add constraint FK_ACTIVITY_USERS foreign key (AUTHOR_ID) references USERS (ID) on delete cascade;
 
-alter table USER_BELONG
-    drop constraint FK_USER_BELONG,
-    add constraint FK_USER_BELONG foreign key (USER_ID) references USERS (ID) on delete cascade;
+    alter table USER_BELONG drop constraint FK_USER_BELONG;
+    alter table USER_BELONG add constraint FK_USER_BELONG foreign key (USER_ID) references USERS (ID) on delete cascade;
 
-alter table ATTACHMENT
-    drop constraint FK_ATTACHMENT,
-    add constraint FK_ATTACHMENT foreign key (USER_ID) references USERS (ID) on delete cascade;
+    alter table ATTACHMENT drop constraint FK_ATTACHMENT;
+    alter table ATTACHMENT add constraint FK_ATTACHMENT foreign key (USER_ID) references USERS (ID) on delete cascade;
 
 --changeset valeriyemelyanov:change_user_type_reference
 
@@ -325,7 +322,43 @@ values ('todo', 'ToDo', 3, 'in_progress,canceled|'),
        ('done', 'Done', 3, 'canceled|'),
        ('canceled', 'Canceled', 3, null);
 
---changeset ishlyakhtenkov:change_UK_USER_BELONG
 
-drop index UK_USER_BELONG;
-create unique index UK_USER_BELONG on USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE) where ENDPOINT is null;
+--changeset ishlyakhtenkov:change_UK_USER_BELONG_pg dbms:postgresql validCheckSum:ANY
+DROP INDEX IF EXISTS UK_USER_BELONG;
+CREATE UNIQUE INDEX UK_USER_BELONG ON USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE) WHERE ENDPOINT IS NULL;
+
+--changeset ishlyakhtenkov:change_UK_USER_BELONG_h2 dbms:h2
+DROP INDEX IF EXISTS UK_USER_BELONG;
+CREATE UNIQUE INDEX UK_USER_BELONG ON USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE);
+
+
+--changeset author:task-8-activity-v7 validCheckSum:ANY
+--validCheckSum: ANY
+
+-- гарантуємо наявність користувача (AUTHOR_ID = 1)
+INSERT INTO USERS (ID, EMAIL, PASSWORD, FIRST_NAME, LAST_NAME, DISPLAY_NAME)
+SELECT 1, 'user@gmail.com', '{noop}password', 'User', 'One', 'User One'
+WHERE NOT EXISTS (SELECT 1 FROM USERS WHERE ID = 1);
+
+-- гарантуємо наявність проекта (PROJECT_ID = 1)
+INSERT INTO PROJECT (ID, CODE, TITLE, DESCRIPTION, TYPE_CODE)
+SELECT 1, 'MAIN', 'Main Test Project', 'Project for testing', 'task_tracker'
+WHERE NOT EXISTS (SELECT 1 FROM PROJECT WHERE ID = 1);
+
+--  Задача (TASK_ID = 100000)
+INSERT INTO TASK (ID, TITLE, STATUS_CODE, TYPE_CODE, PROJECT_ID)
+SELECT 100000, 'Test Task 8', 'done', 'task', 1
+WHERE NOT EXISTS (SELECT 1 FROM TASK WHERE ID = 100000);
+
+-- активності
+INSERT INTO ACTIVITY (ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE)
+SELECT 100001, 1, 100000, '2026-08-20 10:00:00', 'in_progress'  --початок роботи над задачею
+WHERE NOT EXISTS (SELECT 1 FROM ACTIVITY WHERE ID = 100001);
+
+INSERT INTO ACTIVITY (ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE)
+SELECT 100002, 1, 100000, '2026-08-21 10:00:00', 'ready_for_review'  --завершення роботи над задачею
+WHERE NOT EXISTS (SELECT 1 FROM ACTIVITY WHERE ID = 100002);
+
+INSERT INTO ACTIVITY (ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE)
+SELECT 100003, 1, 100000, '2026-08-21 18:00:00', 'done'           --завершення тестування та закриття задачі
+WHERE NOT EXISTS (SELECT 1 FROM ACTIVITY WHERE ID = 100003);

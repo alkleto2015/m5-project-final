@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -139,5 +140,39 @@ public class TaskService {
         if (!userType.equals(possibleUserType)) {
             throw new DataConflictException(String.format(assign ? CANNOT_ASSIGN : CANNOT_UN_ASSIGN, userType, task.getStatusCode()));
         }
+    }
+
+    //розрахунок часу роботи(з момента in_progress до ready_for_review)
+    public Duration getInWorkDuration(Task task) {
+        LocalDateTime inProgress = getStatusTime(task, "in_progress");
+        LocalDateTime readyForReview = getStatusTime(task, "ready_for_review");
+
+        if(inProgress == null || readyForReview == null || readyForReview.isBefore(inProgress)) {
+            return Duration.ZERO;
+        }
+        return Duration.between(inProgress, readyForReview);
+    }
+
+    //розрахунок часу тестування(з момента ready_for_review до done)
+    public Duration getTestingDuration(Task task) {
+        LocalDateTime readyForReview = getStatusTime(task, "ready_for_review");
+        LocalDateTime done = getStatusTime(task, "done");
+
+        if(readyForReview == null || done == null || done.isBefore(readyForReview)) {
+            return Duration.ZERO;
+        }
+        return Duration.between(readyForReview, done);
+    }
+
+    //пошук дати останньої зміни статусу
+    private LocalDateTime getStatusTime(Task task, String statusCode) {
+        if(task.getActivities() == null) {
+            return null;
+        }
+        return task.getActivities().stream()
+                .filter(a -> statusCode.equals(a.getStatusCode()))
+                .map(Activity::getUpdated)
+                .min(LocalDateTime::compareTo)  //знаходить самий ранній час входа в статус
+                .orElse(null);
     }
 }
